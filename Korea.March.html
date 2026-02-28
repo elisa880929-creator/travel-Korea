@@ -162,7 +162,8 @@ async function saveToCloud(){
     body: JSON.stringify(itinerary)
   });
   const data = await res.json();
-  const shareLink = `${location.origin}${location.pathname}?id=${data.id}`;
+  const BASE_URL = "https://elisa880929.github.io/travel-Korea/Korea.March.html";
+  const shareLink = `${BASE_URL}?id=${data.id}`;
 
   const box=document.getElementById('shareResult');
   box.style.display='block';
