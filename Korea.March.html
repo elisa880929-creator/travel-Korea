@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>旅遊行程自動化工具（Google Drive 雲端分享版）</title>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <style>
+    body { font-family: sans-serif; margin: 0; background: #f5f7fa; }
+    header { background: #4f46e5; color: #fff; padding: 16px; font-size: 20px; }
+    .container { padding: 16px; max-width: 1000px; margin: auto; }
+    .card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);}    
+    input, textarea, select { width: 100%; padding: 8px; margin: 6px 0 12px; border-radius: 8px; border: 1px solid #ddd; }
+    button { padding: 10px 14px; border: none; border-radius: 10px; background: #4f46e5; color: #fff; cursor: pointer; margin-right: 8px; }
+    .timeline { border-left: 3px solid #4f46e5; margin-left: 10px; padding-left: 16px; }
+    .time-item { margin-bottom: 16px; }
+    .time { font-weight: bold; color: #4f46e5; }
+    img { max-width: 100%; border-radius: 10px; margin-top: 6px; }
+    .share-box { word-break: break-all; background:#eef2ff; padding:10px; border-radius:8px; margin-top:10px; }
+  </style>
+</head>
+<body>
+<header>旅遊行程自動化工具（Google Drive 雲端短網址分享）</header>
+<div class="container">
+
+  <div class="card" id="editor">
+    <h3>新增 / 編輯行程</h3>
+    <label>天數</label>
+    <input type="number" id="day" min="1" value="1" />
+
+    <label>時段或自訂時間</label>
+    <select id="timeType" onchange="toggleCustomTime()">
+      <option value="早上">早上</option>
+      <option value="下午">下午</option>
+      <option value="晚上">晚上</option>
+      <option value="custom">自訂時間</option>
+    </select>
+    <input type="text" id="customTime" placeholder="例如 09:30" style="display:none" />
+
+    <label>行程標題</label>
+    <input type="text" id="title" />
+
+    <label>行程特色</label>
+    <textarea id="desc"></textarea>
+
+    <label>圖片網址（可留空）</label>
+    <input type="text" id="img" />
+
+    <button onclick="addItem()">加入行程</button>
+    <button onclick="saveToCloud()">產生雲端短網址</button>
+    <div id="shareResult" class="share-box" style="display:none"></div>
+  </div>
+
+  <div class="card">
+    <h3>拖曳排序</h3>
+    <div id="list"></div>
+  </div>
+
+  <div class="card">
+    <h3>時間軸預覽</h3>
+    <div id="preview"></div>
+  </div>
+
+</div>
+
+<script>
+let itinerary = [];
+
+function toggleCustomTime(){
+  const type = document.getElementById('timeType').value;
+  document.getElementById('customTime').style.display = type==='custom' ? 'block':'none';
+}
+
+function getTime(){
+  const type = document.getElementById('timeType').value;
+  return type==='custom' ? document.getElementById('customTime').value : type;
+}
+
+function addItem(){
+  const day = document.getElementById('day').value;
+  const time = getTime();
+  const title = document.getElementById('title').value;
+  const desc = document.getElementById('desc').value;
+  const img = document.getElementById('img').value;
+
+  itinerary.push({day, time, title, desc, img});
+  renderList();
+  renderPreview();
+}
+
+function renderList(){
+  const list = document.getElementById('list');
+  list.innerHTML='';
+  itinerary.forEach((item,i)=>{
+    const div=document.createElement('div');
+    div.className='card';
+    div.innerHTML=`Day ${item.day}｜${item.time} - ${item.title}`;
+    list.appendChild(div);
+  });
+  Sortable.create(list,{animation:150,onEnd:e=>{
+    const moved = itinerary.splice(e.oldIndex,1)[0];
+    itinerary.splice(e.newIndex,0,moved);
+    renderPreview();
+  }});
+}
+
+function renderPreview(){
+  const preview=document.getElementById('preview');
+  preview.innerHTML='';
+  let grouped={};
+  itinerary.forEach(i=>{ if(!grouped[i.day]) grouped[i.day]=[]; grouped[i.day].push(i); });
+
+  Object.keys(grouped).forEach(day=>{
+    const dayDiv=document.createElement('div');
+    dayDiv.innerHTML=`<h4>Day ${day}</h4><div class='timeline'></div>`;
+    const timeline=dayDiv.querySelector('.timeline');
+
+    grouped[day].forEach(item=>{
+      const el=document.createElement('div');
+      el.className='time-item';
+      el.innerHTML=`
+        <div class='time'>${item.time}</div>
+        <div><b>${item.title}</b></div>
+        <div>${item.desc}</div>
+        ${item.img?`<img src='${item.img}'>`:''}
+      `;
+      timeline.appendChild(el);
+    });
+    preview.appendChild(dayDiv);
+  });
+}
+
+/* ===== Google Drive 雲端分享 =====
+   步驟：
+   1. 到 Google Apps Script 建立新專案
+   2. 貼上以下程式並部署為「網頁應用程式」(任何人可存取)
+
+   --- Apps Script 程式碼 ---
+   function doPost(e){
+     const data = e.postData.contents;
+     const file = DriveApp.createFile('itinerary_'+Date.now()+'.json', data, MimeType.PLAIN_TEXT);
+     return ContentService.createTextOutput(JSON.stringify({id:file.getId()})).setMimeType(ContentService.MimeType.JSON);
+   }
+
+   function doGet(e){
+     const id = e.parameter.id;
+     const file = DriveApp.getFileById(id);
+     return ContentService.createTextOutput(file.getBlob().getDataAsString()).setMimeType(ContentService.MimeType.JSON);
+   }
+   ---------------------------------
+
+   3. 將部署網址貼到下面 GAS_URL
+*/
+
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwRryyjFPueMJtrE3ML6r6vdgIN82kIjWXUgIQz3vx8VZ0l0qWvbrt7GkowBlrVLM8ysQ/exec';
+
+async function saveToCloud(){
+  if(!itinerary.length){ alert('尚未新增行程'); return; }
+
+  const res = await fetch(GAS_URL, {
+    method:'POST',
+    body: JSON.stringify(itinerary)
+  });
+  const data = await res.json();
+  const shareLink = `${location.origin}${location.pathname}?id=${data.id}`;
+
+  const box=document.getElementById('shareResult');
+  box.style.display='block';
+  box.innerHTML = `分享連結：<br>${shareLink}`;
+}
+
+async function loadFromCloud(id){
+  const res = await fetch(`${GAS_URL}?id=${id}`);
+  itinerary = await res.json();
+  renderList();
+  renderPreview();
+  document.getElementById('editor').style.display='none';
+}
+
+const params=new URLSearchParams(location.search);
+if(params.get('id')) loadFromCloud(params.get('id'));
+</script>
+</body>
+</html>
