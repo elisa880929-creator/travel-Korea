@@ -1,185 +1,393 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>旅遊行程自動化工具（Google Drive 雲端分享版）</title>
-  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-  <style>
-    body { font-family: sans-serif; margin: 0; background: #f5f7fa; }
-    header { background: #4f46e5; color: #fff; padding: 16px; font-size: 20px; }
-    .container { padding: 16px; max-width: 1000px; margin: auto; }
-    .card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);}    
-    input, textarea, select { width: 100%; padding: 8px; margin: 6px 0 12px; border-radius: 8px; border: 1px solid #ddd; }
-    button { padding: 10px 14px; border: none; border-radius: 10px; background: #4f46e5; color: #fff; cursor: pointer; margin-right: 8px; }
-    .timeline { border-left: 3px solid #4f46e5; margin-left: 10px; padding-left: 16px; }
-    .time-item { margin-bottom: 16px; }
-    .time { font-weight: bold; color: #4f46e5; }
-    img { max-width: 100%; border-radius: 10px; margin-top: 6px; }
-    .share-box { word-break: break-all; background:#eef2ff; padding:10px; border-radius:8px; margin-top:10px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>旅行規劃神器</title>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+<style>
+
+body{
+font-family:system-ui;
+margin:0;
+background:#f3f4f6;
+}
+
+header{
+background:#4f46e5;
+color:white;
+padding:16px;
+font-size:22px;
+}
+
+.container{
+max-width:1000px;
+margin:auto;
+padding:16px;
+}
+
+.card{
+background:white;
+border-radius:12px;
+padding:16px;
+margin-bottom:16px;
+box-shadow:0 4px 12px rgba(0,0,0,0.08);
+}
+
+input,textarea,select{
+width:100%;
+padding:8px;
+margin-top:6px;
+margin-bottom:12px;
+border-radius:8px;
+border:1px solid #ddd;
+}
+
+button{
+padding:10px 14px;
+border:none;
+border-radius:10px;
+background:#4f46e5;
+color:white;
+cursor:pointer;
+margin-right:6px;
+}
+
+.delete{
+background:#ef4444;
+}
+
+.map{
+background:#10b981;
+}
+
+.timeline{
+border-left:3px solid #4f46e5;
+padding-left:14px;
+margin-left:8px;
+}
+
+.time{
+color:#4f46e5;
+font-weight:bold;
+}
+
+img{
+max-width:100%;
+border-radius:10px;
+margin-top:6px;
+}
+
+.share{
+background:#eef2ff;
+padding:10px;
+border-radius:8px;
+word-break:break-all;
+}
+
+</style>
 </head>
+
 <body>
-<header>旅遊行程自動化工具（Google Drive 雲端短網址分享）</header>
+
+<header>旅行規劃神器</header>
+
 <div class="container">
 
-  <div class="card" id="editor">
-    <h3>新增 / 編輯行程</h3>
-    <label>天數</label>
-    <input type="number" id="day" min="1" value="1" />
+<div class="card" id="editor">
 
-    <label>時段或自訂時間</label>
-    <select id="timeType" onchange="toggleCustomTime()">
-      <option value="早上">早上</option>
-      <option value="下午">下午</option>
-      <option value="晚上">晚上</option>
-      <option value="custom">自訂時間</option>
-    </select>
-    <input type="text" id="customTime" placeholder="例如 09:30" style="display:none" />
+<h3>新增 / 編輯行程</h3>
 
-    <label>行程標題</label>
-    <input type="text" id="title" />
+<label>天數</label>
+<input id="day" type="number" min="1" value="1">
 
-    <label>行程特色</label>
-    <textarea id="desc"></textarea>
+<label>時段</label>
+<select id="timeType" onchange="toggleCustomTime()">
+<option value="早上">早上</option>
+<option value="下午">下午</option>
+<option value="晚上">晚上</option>
+<option value="custom">自訂時間</option>
+</select>
 
-    <label>圖片網址（可留空）</label>
-    <input type="text" id="img" />
+<input id="customTime" placeholder="09:30" style="display:none">
 
-    <button onclick="addItem()">加入行程</button>
-    <button onclick="saveToCloud()">產生雲端短網址</button>
-    <div id="shareResult" class="share-box" style="display:none"></div>
-  </div>
+<label>地點</label>
+<input id="location">
 
-  <div class="card">
-    <h3>拖曳排序</h3>
-    <div id="list"></div>
-  </div>
+<label>標題</label>
+<input id="title">
 
-  <div class="card">
-    <h3>時間軸預覽</h3>
-    <div id="preview"></div>
-  </div>
+<label>描述</label>
+<textarea id="desc"></textarea>
+
+<label>圖片網址</label>
+<input id="img">
+
+<button onclick="addItem()">儲存行程</button>
+<button onclick="saveToCloud()">產生分享連結</button>
+
+<div id="shareBox" class="share" style="display:none"></div>
+
+</div>
+
+<div class="card">
+<h3>拖曳排序</h3>
+<div id="list"></div>
+</div>
+
+<div class="card">
+<h3>行程時間軸</h3>
+<div id="preview"></div>
+</div>
 
 </div>
 
 <script>
-let itinerary = [];
+
+let itinerary=[]
+let editIndex=null
 
 function toggleCustomTime(){
-  const type = document.getElementById('timeType').value;
-  document.getElementById('customTime').style.display = type==='custom' ? 'block':'none';
+const t=document.getElementById("timeType").value
+document.getElementById("customTime").style.display=t=="custom"?"block":"none"
 }
 
 function getTime(){
-  const type = document.getElementById('timeType').value;
-  return type==='custom' ? document.getElementById('customTime').value : type;
+const t=document.getElementById("timeType").value
+return t=="custom"?document.getElementById("customTime").value:t
+}
+
+function clearForm(){
+document.getElementById("title").value=""
+document.getElementById("desc").value=""
+document.getElementById("img").value=""
+document.getElementById("location").value=""
+document.getElementById("customTime").value=""
 }
 
 function addItem(){
-  const day = document.getElementById('day').value;
-  const time = getTime();
-  const title = document.getElementById('title').value;
-  const desc = document.getElementById('desc').value;
-  const img = document.getElementById('img').value;
 
-  itinerary.push({day, time, title, desc, img});
-  renderList();
-  renderPreview();
+const item={
+day:document.getElementById("day").value,
+time:getTime(),
+title:document.getElementById("title").value,
+desc:document.getElementById("desc").value,
+img:document.getElementById("img").value,
+location:document.getElementById("location").value
+}
+
+if(editIndex!=null){
+
+itinerary[editIndex]=item
+editIndex=null
+
+}else{
+
+itinerary.push(item)
+
+}
+
+clearForm()
+
+renderList()
+renderPreview()
+
+}
+
+function editItem(i){
+
+const d=itinerary[i]
+
+document.getElementById("day").value=d.day
+document.getElementById("title").value=d.title
+document.getElementById("desc").value=d.desc
+document.getElementById("img").value=d.img
+document.getElementById("location").value=d.location
+
+if(d.time=="早上"||d.time=="下午"||d.time=="晚上"){
+
+document.getElementById("timeType").value=d.time
+
+}else{
+
+document.getElementById("timeType").value="custom"
+document.getElementById("customTime").style.display="block"
+document.getElementById("customTime").value=d.time
+
+}
+
+editIndex=i
+
+}
+
+function deleteItem(i){
+
+if(confirm("刪除這個行程？")){
+
+itinerary.splice(i,1)
+renderList()
+renderPreview()
+
+}
+
+}
+
+function openMap(loc){
+
+if(!loc)return
+
+window.open(
+"https://www.google.com/maps/search/"+encodeURIComponent(loc)
+)
+
 }
 
 function renderList(){
-  const list = document.getElementById('list');
-  list.innerHTML='';
-  itinerary.forEach((item,i)=>{
-    const div=document.createElement('div');
-    div.className='card';
-    div.innerHTML=`Day ${item.day}｜${item.time} - ${item.title}`;
-    list.appendChild(div);
-  });
-  Sortable.create(list,{animation:150,onEnd:e=>{
-    const moved = itinerary.splice(e.oldIndex,1)[0];
-    itinerary.splice(e.newIndex,0,moved);
-    renderPreview();
-  }});
+
+const list=document.getElementById("list")
+list.innerHTML=""
+
+itinerary.forEach((i,index)=>{
+
+const div=document.createElement("div")
+
+div.className="card"
+
+div.innerHTML=`
+
+<b>Day ${i.day}｜${i.time}</b><br>
+${i.title}
+
+<div style="margin-top:8px">
+
+<button onclick="editItem(${index})">編輯</button>
+<button onclick="deleteItem(${index})" class="delete">刪除</button>
+<button onclick="openMap('${i.location}')" class="map">導航</button>
+
+</div>
+
+`
+
+list.appendChild(div)
+
+})
+
+Sortable.create(list,{
+animation:150,
+onEnd:e=>{
+
+const m=itinerary.splice(e.oldIndex,1)[0]
+itinerary.splice(e.newIndex,0,m)
+
+renderPreview()
+
+}
+})
+
 }
 
 function renderPreview(){
-  const preview=document.getElementById('preview');
-  preview.innerHTML='';
-  let grouped={};
-  itinerary.forEach(i=>{ if(!grouped[i.day]) grouped[i.day]=[]; grouped[i.day].push(i); });
 
-  Object.keys(grouped).forEach(day=>{
-    const dayDiv=document.createElement('div');
-    dayDiv.innerHTML=`<h4>Day ${day}</h4><div class='timeline'></div>`;
-    const timeline=dayDiv.querySelector('.timeline');
+const preview=document.getElementById("preview")
+preview.innerHTML=""
 
-    grouped[day].forEach(item=>{
-      const el=document.createElement('div');
-      el.className='time-item';
-      el.innerHTML=`
-        <div class='time'>${item.time}</div>
-        <div><b>${item.title}</b></div>
-        <div>${item.desc}</div>
-        ${item.img?`<img src='${item.img}'>`:''}
-      `;
-      timeline.appendChild(el);
-    });
-    preview.appendChild(dayDiv);
-  });
+let g={}
+
+itinerary.forEach(i=>{
+
+if(!g[i.day])g[i.day]=[]
+
+g[i.day].push(i)
+
+})
+
+Object.keys(g).forEach(day=>{
+
+const d=document.createElement("div")
+
+d.innerHTML=`<h4>Day ${day}</h4><div class="timeline"></div>`
+
+const t=d.querySelector(".timeline")
+
+g[day].forEach(i=>{
+
+const el=document.createElement("div")
+
+el.innerHTML=`
+
+<div class="time">${i.time}</div>
+<div><b>${i.title}</b></div>
+<div>${i.desc}</div>
+${i.img?`<img src="${i.img}">`:""}
+
+`
+
+t.appendChild(el)
+
+})
+
+preview.appendChild(d)
+
+})
+
 }
 
-/* ===== Google Drive 雲端分享 =====
-   步驟：
-   1. 到 Google Apps Script 建立新專案
-   2. 貼上以下程式並部署為「網頁應用程式」(任何人可存取)
+/* Google Drive Apps Script */
 
-   --- Apps Script 程式碼 ---
-   function doPost(e){
-     const data = e.postData.contents;
-     const file = DriveApp.createFile('itinerary_'+Date.now()+'.json', data, MimeType.PLAIN_TEXT);
-     return ContentService.createTextOutput(JSON.stringify({id:file.getId()})).setMimeType(ContentService.MimeType.JSON);
-   }
-
-   function doGet(e){
-     const id = e.parameter.id;
-     const file = DriveApp.getFileById(id);
-     return ContentService.createTextOutput(file.getBlob().getDataAsString()).setMimeType(ContentService.MimeType.JSON);
-   }
-   ---------------------------------
-
-   3. 將部署網址貼到下面 GAS_URL
-*/
-
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbw6dkD731F4beP24OF_HQVPpMI-rSsV5HPh4QELxomNtnJqQ-IOPB16RN1jzsRDChi_8g/exec';
+const GAS_URL="https://script.google.com/macros/s/AKfycbw6dkD731F4beP24OF_HQVPpMI-rSsV5HPh4QELxomNtnJqQ-IOPB16RN1jzsRDChi_8g/exec"
 
 async function saveToCloud(){
-  if(!itinerary.length){ alert('尚未新增行程'); return; }
 
-  const res = await fetch(GAS_URL, {
-    method:'POST',
-    body: JSON.stringify(itinerary)
-  });
-  const data = await res.json();
-  const BASE_URL = "https://elisa880929-creator.github.io/travel-Korea/";
-  const shareLink = `${BASE_URL}?id=${data.id}`;
+if(!itinerary.length){
 
-  const box=document.getElementById('shareResult');
-  box.style.display='block';
-  box.innerHTML = `分享連結：<br>${shareLink}`;
+alert("沒有行程")
+
+return
+
+}
+
+const res=await fetch(GAS_URL,{
+method:"POST",
+body:JSON.stringify(itinerary)
+})
+
+const data=await res.json()
+
+const BASE=location.origin+location.pathname
+
+const link=BASE+"?id="+data.id
+
+const box=document.getElementById("shareBox")
+
+box.style.display="block"
+box.innerHTML="分享連結：<br>"+link
+
 }
 
 async function loadFromCloud(id){
-  const res = await fetch(`${GAS_URL}?id=${id}`);
-  itinerary = await res.json();
-  renderList();
-  renderPreview();
-  document.getElementById('editor').style.display='none';
+
+const res=await fetch(GAS_URL+"?id="+id)
+
+itinerary=await res.json()
+
+renderList()
+renderPreview()
+
+document.getElementById("editor").style.display="none"
+
 }
 
-const params=new URLSearchParams(location.search);
-if(params.get('id')) loadFromCloud(params.get('id'));
+const p=new URLSearchParams(location.search)
+
+if(p.get("id")){
+
+loadFromCloud(p.get("id"))
+
+}
+
 </script>
+
 </body>
 </html>
