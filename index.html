@@ -6,6 +6,7 @@
 <title>旅行規劃神器</title>
 
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
 
@@ -127,6 +128,8 @@ word-break:break-all;
 
 <button onclick="addItem()">儲存行程</button>
 <button onclick="saveToCloud()">產生分享連結</button>
+<button onclick="exportPDF()">輸出PDF</button>
+<button onclick="openView()">純觀看版</button>
 
 <div id="shareBox" class="share" style="display:none"></div>
 
@@ -379,13 +382,45 @@ document.getElementById("editor").style.display="none"
 
 }
 
+function exportPDF(){
+
+const element=document.getElementById("preview")
+
+const opt={
+margin:0.5,
+filename:"旅行行程.pdf",
+image:{type:"jpeg",quality:0.98},
+html2canvas:{scale:2},
+jsPDF:{unit:"in",format:"a4",orientation:"portrait"}
+}
+
+html2pdf().set(opt).from(element).save()
+
+}
+
+function openView(){
+
+const BASE=location.origin+location.pathname
+
+const link=BASE+"?view=1"
+
+window.open(link)
+
+}
+
 const p=new URLSearchParams(location.search)
+
+if(p.get("view")){
+document.getElementById("editor").style.display="none"
+document.querySelector("#list").style.display="none"
+}
 
 if(p.get("id")){
 
 loadFromCloud(p.get("id"))
 
 }
+
 
 </script>
 
