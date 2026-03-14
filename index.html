@@ -54,15 +54,12 @@ background:#4f46e5;
 color:white;
 cursor:pointer;
 margin-right:6px;
+margin-top:4px;
 }
 
-.delete{
-background:#ef4444;
-}
-
-.map{
-background:#10b981;
-}
+.delete{background:#ef4444;}
+.map{background:#10b981;}
+.copy{background:#06b6d4;}
 
 .timeline{
 border-left:3px solid #4f46e5;
@@ -86,6 +83,7 @@ background:#eef2ff;
 padding:10px;
 border-radius:8px;
 word-break:break-all;
+margin-top:10px;
 }
 
 </style>
@@ -163,37 +161,32 @@ return t=="custom"?document.getElementById("customTime").value:t
 }
 
 function clearForm(){
-document.getElementById("title").value=""
-document.getElementById("desc").value=""
-document.getElementById("img").value=""
-document.getElementById("location").value=""
-document.getElementById("customTime").value=""
+title.value=""
+desc.value=""
+img.value=""
+location.value=""
+customTime.value=""
 }
 
 function addItem(){
 
 const item={
-day:document.getElementById("day").value,
+day:day.value,
 time:getTime(),
-title:document.getElementById("title").value,
-desc:document.getElementById("desc").value,
-img:document.getElementById("img").value,
-location:document.getElementById("location").value
+title:title.value,
+desc:desc.value,
+img:img.value,
+location:location.value
 }
 
 if(editIndex!=null){
-
 itinerary[editIndex]=item
 editIndex=null
-
 }else{
-
 itinerary.push(item)
-
 }
 
 clearForm()
-
 renderList()
 renderPreview()
 
@@ -203,22 +196,18 @@ function editItem(i){
 
 const d=itinerary[i]
 
-document.getElementById("day").value=d.day
-document.getElementById("title").value=d.title
-document.getElementById("desc").value=d.desc
-document.getElementById("img").value=d.img
-document.getElementById("location").value=d.location
+day.value=d.day
+title.value=d.title
+desc.value=d.desc
+img.value=d.img
+location.value=d.location
 
 if(d.time=="早上"||d.time=="下午"||d.time=="晚上"){
-
-document.getElementById("timeType").value=d.time
-
+timeType.value=d.time
 }else{
-
-document.getElementById("timeType").value="custom"
-document.getElementById("customTime").style.display="block"
-document.getElementById("customTime").value=d.time
-
+timeType.value="custom"
+customTime.style.display="block"
+customTime.value=d.time
 }
 
 editIndex=i
@@ -228,11 +217,9 @@ editIndex=i
 function deleteItem(i){
 
 if(confirm("刪除這個行程？")){
-
 itinerary.splice(i,1)
 renderList()
 renderPreview()
-
 }
 
 }
@@ -255,7 +242,6 @@ list.innerHTML=""
 itinerary.forEach((i,index)=>{
 
 const div=document.createElement("div")
-
 div.className="card"
 
 div.innerHTML=`
@@ -270,7 +256,6 @@ ${i.title}
 <button onclick="openMap('${i.location}')" class="map">導航</button>
 
 </div>
-
 `
 
 list.appendChild(div)
@@ -299,11 +284,8 @@ preview.innerHTML=""
 let g={}
 
 itinerary.forEach(i=>{
-
 if(!g[i.day])g[i.day]=[]
-
 g[i.day].push(i)
-
 })
 
 Object.keys(g).forEach(day=>{
@@ -337,18 +319,13 @@ preview.appendChild(d)
 
 }
 
-/* Google Drive Apps Script */
-
-const GAS_URL="https://script.google.com/macros/s/AKfycbw6dkD731F4beP24OF_HQVPpMI-rSsV5HPh4QELxomNtnJqQ-IOPB16RN1jzsRDChi_8g/exec"
+const GAS_URL="你的AppsScript網址"
 
 async function saveToCloud(){
 
 if(!itinerary.length){
-
 alert("沒有行程")
-
 return
-
 }
 
 const res=await fetch(GAS_URL,{
@@ -358,14 +335,26 @@ body:JSON.stringify(itinerary)
 
 const data=await res.json()
 
-const BASE=location.origin+location.pathname
-
-const link=BASE+"?id="+data.id
+const link=location.origin+location.pathname+"?id="+data.id
 
 const box=document.getElementById("shareBox")
 
 box.style.display="block"
-box.innerHTML="分享連結：<br>"+link
+
+box.innerHTML=`
+分享連結：<br>
+${link}
+<br><br>
+<button class="copy" onclick="copyLink('${link}')">複製連結</button>
+`
+
+}
+
+function copyLink(link){
+
+navigator.clipboard.writeText(link)
+
+alert("已複製連結")
 
 }
 
@@ -378,49 +367,32 @@ itinerary=await res.json()
 renderList()
 renderPreview()
 
-document.getElementById("editor").style.display="none"
+editor.style.display="none"
 
 }
 
 function exportPDF(){
 
-const element=document.getElementById("preview")
-
-const opt={
-margin:0.5,
-filename:"旅行行程.pdf",
-image:{type:"jpeg",quality:0.98},
-html2canvas:{scale:2},
-jsPDF:{unit:"in",format:"a4",orientation:"portrait"}
-}
-
-html2pdf().set(opt).from(element).save()
+html2pdf().from(preview).save("旅行行程.pdf")
 
 }
 
 function openView(){
 
-const BASE=location.origin+location.pathname
-
-const link=BASE+"?view=1"
-
-window.open(link)
+window.open(location.origin+location.pathname+"?view=1")
 
 }
 
 const p=new URLSearchParams(location.search)
 
 if(p.get("view")){
-document.getElementById("editor").style.display="none"
-document.querySelector("#list").style.display="none"
+editor.style.display="none"
+list.style.display="none"
 }
 
 if(p.get("id")){
-
 loadFromCloud(p.get("id"))
-
 }
-
 
 </script>
 
